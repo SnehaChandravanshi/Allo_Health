@@ -18,11 +18,11 @@ export default function LoginPage() {
     if (user) {
       // Ensure session cookie is set if localStorage exists
       if (!document.cookie.includes('allo_logged_in=')) {
-        document.cookie = 'allo_logged_in=true; path=/; max-age=86400; SameSite=Lax';
+        document.cookie = 'allo_logged_in=true; path=/; max-age=86400; SameSite=Lax; Secure';
       }
-      router.push('/');
+      window.location.href = '/';
     }
-  }, [router]);
+  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,13 +49,13 @@ export default function LoginPage() {
       };
       localStorage.setItem('allo_user', JSON.stringify(userData));
       
-      // Set session cookie for middleware
-      document.cookie = 'allo_logged_in=true; path=/; max-age=86400; SameSite=Lax';
+      // Set session cookie for middleware (with Secure flag for HTTPS/Vercel)
+      document.cookie = 'allo_logged_in=true; path=/; max-age=86400; SameSite=Lax; Secure';
       
       // Dispatch custom storage event to notify Sidebar instantly
       window.dispatchEvent(new Event('storage'));
       
-      router.push('/');
+      window.location.href = '/';
     } catch (err: any) {
       setError('Authentication failed. Please try again.');
     } finally {
@@ -81,13 +81,13 @@ export default function LoginPage() {
       };
       localStorage.setItem('allo_user', JSON.stringify(userData));
       
-      // Set session cookie for middleware
-      document.cookie = 'allo_logged_in=true; path=/; max-age=86400; SameSite=Lax';
+      // Set session cookie for middleware (with Secure flag for HTTPS/Vercel)
+      document.cookie = 'allo_logged_in=true; path=/; max-age=86400; SameSite=Lax; Secure';
       
       // Dispatch custom storage event to notify Sidebar instantly
       window.dispatchEvent(new Event('storage'));
       
-      router.push('/');
+      window.location.href = '/';
     } catch (err: any) {
       setError('Google sign-in failed.');
     } finally {

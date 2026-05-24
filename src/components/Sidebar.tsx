@@ -36,12 +36,12 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     localStorage.removeItem('allo_user');
-    // Clear session cookie for middleware
-    document.cookie = 'allo_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax';
+    // Clear session cookie for middleware (with Secure flag for HTTPS/Vercel)
+    document.cookie = 'allo_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax; Secure';
     setUser(null);
     // Dispatch event to trigger re-renders elsewhere
     window.dispatchEvent(new Event('storage'));
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   const menuItems = [
