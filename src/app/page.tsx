@@ -30,6 +30,7 @@ interface DashboardStats {
   lowStockAlerts: LowStockAlert[];
   recentActivity: RecentActivity[];
   isMockMode: boolean;
+  dbConnectionError?: string | null;
 }
 
 export default function DashboardPage() {
@@ -88,11 +89,21 @@ export default function DashboardPage() {
         <p style={{ color: 'var(--text-secondary)' }}>Overview of your products, warehouses, active holds, and logistics.</p>
 
         {stats?.isMockMode && (
-          <div className="alert alert-warning" style={{ marginTop: '1rem', width: '100%' }} id="dashboard-warning-banner">
-            <span className="alert-icon">⚠️</span>
-            <div className="alert-content">
-              <strong>Mock Mode Active:</strong> Running on in-memory storage (DATABASE_URL is not configured). Concurrency safety is secured via a mock Mutex lock.
+          <div className="alert alert-warning" style={{ marginTop: '1rem', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '0.75rem' }} id="dashboard-warning-banner">
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <span className="alert-icon" style={{ fontSize: '1.25rem' }}>⚠️</span>
+              <div className="alert-content" style={{ fontWeight: 700 }}>
+                Mock Mode Active: Running on in-memory storage. Concurrency safety is secured via a mock Mutex lock.
+              </div>
             </div>
+            {stats.dbConnectionError && (
+              <div style={{ paddingLeft: '2rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255, 255, 255, 0.7)' }}>Connection Diagnosis:</span>
+                <code style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.5rem 0.75rem', borderRadius: '0.25rem', color: '#f8fafc', fontSize: '0.8rem', lineHeight: '1.45', fontFamily: 'monospace', border: '1px solid rgba(255, 255, 255, 0.05)', wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>
+                  {stats.dbConnectionError}
+                </code>
+              </div>
+            )}
           </div>
         )}
       </section>

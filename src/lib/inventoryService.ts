@@ -165,6 +165,7 @@ const prisma = new Proxy({} as any, {
 let isDatabaseAvailable = true;
 let checkedDb = false;
 let lastCheckedDbTime = 0;
+let dbConnectionError: string | null = null;
 
 // Helper to determine if we should fall back to mock
 async function checkDatabaseState(): Promise<boolean> {
@@ -177,25 +178,42 @@ async function checkDatabaseState(): Promise<boolean> {
     const client = getPrismaClient();
     if (!client) {
       isDatabaseAvailable = false;
+      dbConnectionError = 'DATABASE_URL environment variable is not configured on the server.';
       checkedDb = true;
       lastCheckedDbTime = now;
       return false;
     }
-    // Simple fast query with an 8-second timeout for serverless database cold starts (Neon/Supabase)
+    
+    // Test database connectivity with an 8-second timeout
+    const testConnection = async () => {
+      try {
+        await client.$queryRaw`SELECT 1`;
+        return { success: true, error: null };
+      } catch (err: any) {
+        return { success: false, error: err.message || String(err) };
+      }
+    };
+
     const race = await Promise.race([
-      client.$queryRaw`SELECT 1`.then(() => true).catch(() => false),
-      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000))
+      testConnection(),
+      new Promise<{ success: boolean; error: string | null }>((resolve) => 
+        setTimeout(() => resolve({ success: false, error: 'Connection timeout (8 seconds exceeded).' }), 8000)
+      )
     ]);
-    isDatabaseAvailable = race;
-  } catch {
+
+    isDatabaseAvailable = race.success;
+    dbConnectionError = race.error;
+  } catch (error: any) {
     isDatabaseAvailable = false;
+    dbConnectionError = error.message || String(error);
   }
   checkedDb = true;
   lastCheckedDbTime = now;
   if (!isDatabaseAvailable) {
-    console.warn('⚠️ PostgreSQL database connection failed. Falling back to the in-memory Mock Store for the demo.');
+    console.warn(`⚠️ PostgreSQL database connection failed: ${dbConnectionError}. Falling back to the in-memory Mock Store for the demo.`);
   } else {
     console.log('✅ PostgreSQL database connection established successfully. Live Mode Active.');
+    dbConnectionError = null;
   }
   return isDatabaseAvailable;
 }
@@ -221,6 +239,13 @@ function cleanupExpiredReservationsMockSync() {
 export const inventoryService = {
   isMockMode: async (): Promise<boolean> => {
     return !(await checkDatabaseState());
+  },
+
+  getDbConnectionError: async (): Promise<string | null> => {
+    if (!checkedDb) {
+      await checkDatabaseState();
+    }
+    return dbConnectionError;
   },
 
   resetMockDb: () => {

@@ -7,9 +7,10 @@ export async function GET() {
   try {
     const stats = await inventoryService.getDashboardStats();
     const isMock = await inventoryService.isMockMode();
+    const dbError = await inventoryService.getDbConnectionError();
     
     return NextResponse.json(
-      { ...stats, isMockMode: isMock },
+      { ...stats, isMockMode: isMock, dbConnectionError: dbError },
       {
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
